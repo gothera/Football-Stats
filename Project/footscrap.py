@@ -1,19 +1,23 @@
 import requests
 from Team import Team
 from bs4 import BeautifulSoup
+from team_codes import team_codes
 import string
+import re
+
 
 def get_match_links(team):
-    url = 'https://fbref.com/en/squads/e0652b02/{}'.format(team)
+    url = 'https://fbref.com/en/squads/{}/2019-2020/matchlogs/s3260/schedule/{}-Scores-and-Fixtures-Serie-A'.format(team_codes[team], team)
     response = requests.get(url)
     url_format = 'https://fbref.com'
 
     soup = BeautifulSoup(response.text.encode("utf-8"), 'html.parser')
-    table = soup.find('table', {'id': 'ks_sched_all'})
+    table = soup.find('div', {'id': 'all_matchlogs_3260'}).find('div', {'class': 'table_outer_container'}).find('div', {'id': 'div_matchlogs_3260'}).find('table', {'id': 'matchlogs_3260'})
     res = table.findAll('tr')
     match_links = []
     for tr in res:
         cols = tr.findAll('td')
+        # print(cols)
         if len(cols) > 0:
             match = cols[15].find('a')
             if match:
@@ -36,10 +40,8 @@ def get_match_stats(links):
             stats = row.findAll('td')
             for r in stats:
                 x = r.findAll('div')[1]
-                # print(str(x).strip('</div><strong></strong>').replace('<strong>', ''))
                 y = str(x).strip('</div><strong></strong>')
                 y = "".join([ch for ch in y if ch in string.printable])
-                # print(y)
                 facts_list.append(y)
         home_team_stats = {'possession' : int(facts_list[0][:2]),
                            'good_passes': int( (facts_list[2][:facts_list[2].find('<')]).split('of')[0] ),
@@ -58,22 +60,23 @@ def get_match_stats(links):
                            'opp_attempts' : int( (facts_list[7][facts_list[7].find('>')+ 1: ]).split('of')[1] )
                            }
 
-        extra = soup.find('div', {'id': 'team_stats_extra'})
-        print(extra, [...])
+        teams = link[38:]
+        home_team = teams.split('-')[0]
+        away_team = teams.split('-')[1]
 
 
-        print(home_team_stats)
-        print(away_team_stats)
-        break
+        print(home_team, home_team_stats)
+        print(away_team, away_team_stats)
+        print()
+        # break
 
 
 
 
-links = get_match_links('Juventus')
+links = get_match_links('Parma')
+# for l in links:
+#     print(l)
+#     print()
 get_match_stats(links)
 
 
-
-    # res = table.findAll('tr')
-    # for row in res:
-    #     print(res, [...])
